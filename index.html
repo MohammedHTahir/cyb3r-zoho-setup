@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB3R Admin - Zoho Setup</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #ff0066;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .status {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success { background: #065f46; }
+        .error { background: #7f1d1d; }
+        .processing { background: #3730a3; }
+        .warning { background: #78350f; }
+        button {
+            background: #ff0066;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #cc0052;
+        }
+        .code-block {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        .step {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .step-number {
+            background: #ff0066;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin: 10px 0;
+        }
+        .highlight {
+            color: #ff0066;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 CYB3R Zoho Setup</h1>
+        <div id="content">
+            <!-- Content will be dynamically loaded -->
+        </div>
+    </div>
+
+    <script>
+        // Configuration - These will be provided by the user
+        const SUPABASE_URL = 'https://obuiajossixkmsmtndsd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9idWlham9zc2l4a21zbXRuZHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NjQ2NTcsImV4cCI6MjA2ODQ0MDY1N30._jiCUDsQsU_EUUIMbifcks-N_2ZB-meL953vJyocRl0';
+        const ZOHO_CLIENT_ID = '1000.6MK09IULQZ8DEKOR444I1UNTSHLIBI';
+        
+        // Check if we have an authorization code
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const content = document.getElementById('content');
+
+        if (code) {
+            showCodeReceived(code);
+        } else {
+            showInstructions();
+        }
+
+        function showInstructions() {
+            const redirectUri = window.location.origin + window.location.pathname;
+            const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=ZohoBooks.fullaccess.all,Desk.tickets.ALL&client_id=${ZOHO_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
+            
+            content.innerHTML = `
+                <div class="status warning">
+                    <h2>⚠️ Important: Client Secret Required</h2>
+                    <p>For security, the client secret is not stored in this page. You'll need to provide it during setup.</p>
+                </div>
+
+                <div class="step">
+                    <h3><span class="step-number">1</span>Update Zoho Redirect URI</h3>
+                    <p>First, update your Zoho app's redirect URI to:</p>
+                    <div class="code-block">${redirectUri}</div>
+                    <p>Do this in your <a href="https://api-console.zoho.com" target="_blank" style="color: #ff0066;">Zoho API Console</a></p>
+                </div>
+
+                <div class="step">
+                    <h3><span class="step-number">2</span>Authorize Access</h3>
+                    <p>Click below to authorize CYB3R to access your organization's Zoho data:</p>
+                    <button onclick="window.location.href='${authUrl}'">
+                        🚀 Authorize Zoho Access
+                    </button>
+                </div>
+
+                <div class="step">
+                    <h3><span class="step-number">3</span>What This Enables</h3>
+                    <ul>
+                        <li>📄 All users get automatic access to <span class="highlight">invoices</span></li>
+                        <li>🎫 All users get automatic access to <span class="highlight">tickets</span></li>
+                        <li>🔐 No individual authentication required</li>
+                        <li>🔄 Automatic token refresh</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function showCodeReceived(code) {
+            content.innerHTML = `
+                <div class="status processing">
+                    <h2>🎉 Authorization Code Received!</h2>
+                    <p>Complete the setup by providing your Zoho client secret.</p>
+                </div>
+
+                <div class="step">
+                    <h3>Enter Your Zoho Client Secret</h3>
+                    <p>Get this from your <a href="https://api-console.zoho.com" target="_blank" style="color: #ff0066;">Zoho API Console</a></p>
+                    <input type="password" id="clientSecret" placeholder="Your Zoho Client Secret" />
+                    <button onclick="completeSetup('${code}')">
+                        🔒 Complete Setup
+                    </button>
+                </div>
+
+                <div class="code-block" style="margin-top: 20px;">
+                    <strong>Authorization Code:</strong><br/>
+                    ${code}
+                </div>
+            `;
+        }
+
+        async function completeSetup(code) {
+            const clientSecret = document.getElementById('clientSecret').value;
+            
+            if (!clientSecret) {
+                alert('Please enter your Zoho client secret');
+                return;
+            }
+
+            content.innerHTML = `
+                <div class="status processing">
+                    <h2>🔄 Processing...</h2>
+                    <p>Exchanging authorization code for tokens...</p>
+                </div>
+            `;
+
+            try {
+                // Exchange code for tokens
+                const redirectUri = window.location.origin + window.location.pathname;
+                const tokenResponse = await fetch('https://accounts.zoho.com/oauth/v2/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        client_id: ZOHO_CLIENT_ID,
+                        client_secret: clientSecret,
+                        redirect_uri: redirectUri,
+                        code: code
+                    })
+                });
+
+                const tokenData = await tokenResponse.json();
+
+                if (tokenData.access_token) {
+                    content.innerHTML = `
+                        <div class="status processing">
+                            <h2>🔄 Storing Tokens...</h2>
+                            <p>Saving to Supabase database...</p>
+                        </div>
+                    `;
+
+                    // Store in Supabase
+                    const storeResponse = await fetch(`${SUPABASE_URL}/rest/v1/zoho_tokens`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'resolution=merge-duplicates',
+                        },
+                        body: JSON.stringify({
+                            id: '00000000-0000-0000-0000-000000000001',
+                            user_id: '00000000-0000-0000-0000-000000000001',
+                            access_token: tokenData.access_token,
+                            refresh_token: tokenData.refresh_token || '',
+                            expires_in: tokenData.expires_in || 3600,
+                            token_type: tokenData.token_type || 'Bearer',
+                            api_domain: tokenData.api_domain || 'https://www.zohoapis.com',
+                            is_organization_wide: true,
+                            organization_name: 'CYB3R Organization',
+                            created_at: new Date().toISOString(),
+                        })
+                    });
+
+                    if (storeResponse.ok || storeResponse.status === 409) {
+                        content.innerHTML = `
+                            <div class="status success">
+                                <h2>✅ Setup Complete!</h2>
+                                <p>Zoho integration has been configured successfully.</p>
+                            </div>
+
+                            <div class="step">
+                                <h3>🎉 What's Now Enabled</h3>
+                                <ul>
+                                    <li>✅ All CYB3R app users have <span class="highlight">automatic access</span></li>
+                                    <li>✅ Access to all <span class="highlight">invoices</span></li>
+                                    <li>✅ Access to all <span class="highlight">support tickets</span></li>
+                                    <li>✅ <span class="highlight">No individual authentication</span> required</li>
+                                    <li>✅ Tokens will <span class="highlight">auto-refresh</span> when needed</li>
+                                </ul>
+                            </div>
+
+                            <div class="step">
+                                <h3>🚀 Next Steps</h3>
+                                <ol>
+                                    <li>Open the CYB3R mobile app</li>
+                                    <li>Go to Invoices or Help screen</li>
+                                    <li>Data loads automatically for all users!</li>
+                                </ol>
+                            </div>
+
+                            <button onclick="window.location.href=window.location.pathname">
+                                🔄 Setup Another Organization
+                            </button>
+                        `;
+                    } else {
+                        const errorText = await storeResponse.text();
+                        throw new Error(`Failed to store tokens: ${errorText}`);
+                    }
+                } else {
+                    throw new Error(`Token exchange failed: ${JSON.stringify(tokenData)}`);
+                }
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="status error">
+                        <h2>❌ Setup Failed</h2>
+                        <p>${error.message}</p>
+                    </div>
+
+                    <div class="code-block">
+                        <strong>Error Details:</strong><br/>
+                        ${error.stack}
+                    </div>
+
+                    <button onclick="showCodeReceived('${code}')">
+                        🔄 Try Again
+                    </button>
+
+                    <button onclick="window.location.href=window.location.pathname" style="background: #666;">
+                        🏠 Start Over
+                    </button>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
