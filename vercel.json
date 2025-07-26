@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/complete-setup.js": {
+      "maxDuration": 10
+    }
+  }
+} 

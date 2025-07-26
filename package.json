@@ -1,0 +1,8 @@
+{
+  "name": "cyb3r-zoho-setup",
+  "version": "1.0.0",
+  "description": "CYB3R Zoho Setup Portal",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+} 

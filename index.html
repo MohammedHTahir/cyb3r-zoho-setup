@@ -218,56 +218,25 @@
             `;
 
             try {
-                // Exchange code for tokens - use exact redirect URI
-                const redirectUri = 'https://mohammedhtahir.github.io/cyb3r-zoho-setup/';
-                const tokenResponse = await fetch('https://accounts.zoho.com/oauth/v2/token', {
+                // Use Vercel function to handle OAuth (avoids CORS)
+                const API_URL = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000/api/complete-setup'
+                    : 'https://cyb3r-zoho-setup.vercel.app/api/complete-setup';
+                    
+                const tokenResponse = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
-                    body: new URLSearchParams({
-                        grant_type: 'authorization_code',
-                        client_id: ZOHO_CLIENT_ID,
-                        client_secret: clientSecret,
-                        redirect_uri: redirectUri,
-                        code: code
+                    body: JSON.stringify({
+                        code: code,
+                        clientSecret: clientSecret
                     })
                 });
 
                 const tokenData = await tokenResponse.json();
 
-                if (tokenData.access_token) {
-                    content.innerHTML = `
-                        <div class="status processing">
-                            <h2>🔄 Storing Tokens...</h2>
-                            <p>Saving to Supabase database...</p>
-                        </div>
-                    `;
-
-                    // Store in Supabase
-                    const storeResponse = await fetch(`${SUPABASE_URL}/rest/v1/zoho_tokens`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'resolution=merge-duplicates',
-                        },
-                        body: JSON.stringify({
-                            id: '00000000-0000-0000-0000-000000000001',
-                            user_id: '00000000-0000-0000-0000-000000000001',
-                            access_token: tokenData.access_token,
-                            refresh_token: tokenData.refresh_token || '',
-                            expires_in: tokenData.expires_in || 3600,
-                            token_type: tokenData.token_type || 'Bearer',
-                            api_domain: tokenData.api_domain || 'https://www.zohoapis.com',
-                            is_organization_wide: true,
-                            organization_name: 'CYB3R Organization',
-                            created_at: new Date().toISOString(),
-                        })
-                    });
-
-                    if (storeResponse.ok || storeResponse.status === 409) {
+                if (tokenData.success) {
                         content.innerHTML = `
                             <div class="status success">
                                 <h2>✅ Setup Complete!</h2>
@@ -298,12 +267,8 @@
                                 🔄 Setup Another Organization
                             </button>
                         `;
-                    } else {
-                        const errorText = await storeResponse.text();
-                        throw new Error(`Failed to store tokens: ${errorText}`);
-                    }
                 } else {
-                    throw new Error(`Token exchange failed: ${JSON.stringify(tokenData)}`);
+                    throw new Error(`Setup failed: ${tokenData.error || 'Unknown error'} - ${JSON.stringify(tokenData.details || {})}`);
                 }
             } catch (error) {
                 console.error('Setup error:', error);
