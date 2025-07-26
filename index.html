@@ -142,8 +142,8 @@
         }
 
         function showInstructions() {
-            // Use exact redirect URI to match Zoho configuration
-            const redirectUri = 'https://mohammedhtahir.github.io/cyb3r-zoho-setup/';
+            // Use current page as redirect URI
+            const redirectUri = window.location.origin + window.location.pathname;
             const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=ZohoBooks.fullaccess.all,Desk.tickets.ALL&client_id=${ZOHO_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
             
             content.innerHTML = `
@@ -221,7 +221,7 @@
                 // Use Vercel function to handle OAuth (avoids CORS)
                 const API_URL = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3000/api/complete-setup'
-                    : 'https://cyb3r-zoho-setup.vercel.app/api/complete-setup';
+                    : `${window.location.origin}/api/complete-setup`;
                     
                 const tokenResponse = await fetch(API_URL, {
                     method: 'POST',
@@ -230,7 +230,8 @@
                     },
                     body: JSON.stringify({
                         code: code,
-                        clientSecret: clientSecret
+                        clientSecret: clientSecret,
+                        redirectUri: window.location.origin + window.location.pathname
                     })
                 });
 

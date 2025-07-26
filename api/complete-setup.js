@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
-  // Enable CORS for your GitHub Pages domain
-  res.setHeader('Access-Control-Allow-Origin', 'https://mohammedhtahir.github.io');
+  // Enable CORS for all origins (you can restrict this to specific domains later)
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { code, clientSecret } = req.body;
+    const { code, clientSecret, redirectUri } = req.body;
     
     if (!code || !clientSecret) {
       return res.status(400).json({ error: 'Missing required parameters' });
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         grant_type: 'authorization_code',
         client_id: '1000.6MK09IULQZ8DEKOR444I1UNTSHLIBI',
         client_secret: clientSecret,
-        redirect_uri: 'https://mohammedhtahir.github.io/cyb3r-zoho-setup/',
+        redirect_uri: redirectUri || req.headers.origin + '/',
         code: code
       })
     });
