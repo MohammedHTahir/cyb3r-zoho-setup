@@ -114,18 +114,36 @@
         const ZOHO_CLIENT_ID = '1000.6MK09IULQZ8DEKOR444I1UNTSHLIBI';
         
         // Check if we have an authorization code
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const content = document.getElementById('content');
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const content = document.getElementById('content');
 
-        if (code) {
-            showCodeReceived(code);
-        } else {
-            showInstructions();
+            if (code) {
+                showCodeReceived(code);
+            } else {
+                showInstructions();
+            }
+        } catch (error) {
+            console.error('Page load error:', error);
+            document.body.innerHTML = `
+                <div class="container">
+                    <h1>🔐 CYB3R Zoho Setup</h1>
+                    <div class="status error">
+                        <h2>❌ Load Failed</h2>
+                        <p>${error.message || error.toString()}</p>
+                    </div>
+                    <div class="code-block">
+                        <strong>Error Details:</strong><br/>
+                        ${error.stack || 'No stack trace available'}
+                    </div>
+                </div>
+            `;
         }
 
         function showInstructions() {
-            const redirectUri = window.location.origin + window.location.pathname;
+            // Use exact redirect URI to match Zoho configuration
+            const redirectUri = 'https://mohammedhtahir.github.io/cyb3r-zoho-setup/';
             const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=ZohoBooks.fullaccess.all,Desk.tickets.ALL&client_id=${ZOHO_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
             
             content.innerHTML = `
@@ -200,8 +218,8 @@
             `;
 
             try {
-                // Exchange code for tokens
-                const redirectUri = window.location.origin + window.location.pathname;
+                // Exchange code for tokens - use exact redirect URI
+                const redirectUri = 'https://mohammedhtahir.github.io/cyb3r-zoho-setup/';
                 const tokenResponse = await fetch('https://accounts.zoho.com/oauth/v2/token', {
                     method: 'POST',
                     headers: {
@@ -288,15 +306,19 @@
                     throw new Error(`Token exchange failed: ${JSON.stringify(tokenData)}`);
                 }
             } catch (error) {
+                console.error('Setup error:', error);
                 content.innerHTML = `
                     <div class="status error">
                         <h2>❌ Setup Failed</h2>
-                        <p>${error.message}</p>
+                        <p>${error.message || error.toString() || 'Unknown error occurred'}</p>
                     </div>
 
                     <div class="code-block">
                         <strong>Error Details:</strong><br/>
-                        ${error.stack}
+                        ${error.stack || 'No stack trace available'}<br/>
+                        <br/>
+                        <strong>Error Type:</strong> ${error.name || 'Unknown'}<br/>
+                        <strong>Full Error:</strong> ${JSON.stringify(error)}
                     </div>
 
                     <button onclick="showCodeReceived('${code}')">
